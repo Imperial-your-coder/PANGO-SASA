@@ -15,9 +15,14 @@ Cette application offre une cartographie d'une commune de la RDC, en intégrant 
 ## 🚀 Fonctionnalités principales
 
 - 🔐 Authentification sécurisée
+
+
 - 📍 Géolocalisation des parcelles et traçage de polygone autour des parcelles
+![Aperçu](./screenshots/creer_parcelle.png)
+
 - 🧾 Impression de reçus PDF
 - 👤 Rôles utilisateurs (admin, agent cadastral)
+![Aperçu](./screenshots/admin_principal.png)
 
 
 
