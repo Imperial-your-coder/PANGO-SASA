@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardiology Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #F2F2F2;
+            --primary-text: #111111;
+            --secondary-text: #333333;
+            --highlight: #FFF000;
+            --card-bg: #DADADA;
+            --inactive-card: #C4C4C4;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--highlight);
+            margin: 0;
+            padding: 0;
+            color: var(--primary-text);
+        }
+        
+        .app-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: var(--primary-bg);
+            border-radius: 20px;
+            border: 2px solid var(--secondary-text);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .timeline-point {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            background-color: var(--highlight);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .timeline-point::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background-color: var(--primary-text);
+            border-radius: 50%;
+        }
+        
+        .timeline-point.locked::before {
+            content: '🔒';
+            position: absolute;
+            font-size: 10px;
+            z-index: 2;
+        }
+        
+        .timeline-line {
+            height: 2px;
+            background-color: var(--secondary-text);
+            flex-grow: 1;
+        }
+        
+        .vertical-line {
+            width: 2px;
+            height: 100px;
+            background-color: var(--secondary-text);
+            margin: 10px auto;
+        }
+        
+        .medication-tag {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 4px 12px;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .medication-tag .close {
+            margin-left: 8px;
+            cursor: pointer;
+            color: var(--secondary-text);
+        }
+        
+        .blood-pressure-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .blood-pressure-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            background-color: var(--highlight);
+            border-radius: 0 0 0 30px;
+        }
+        
+        .bp-graph {
+            height: 60px;
+            background: linear-gradient(to right, var(--highlight), #4CAF50);
+            border-radius: 8px;
+            margin-top: 10px;
+            position: relative;
+        }
+        
+        .bp-graph::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 4px,
+                rgba(0,0,0,0.1) 4px,
+                rgba(0,0,0,0.1) 8px
+            );
+            border-radius: 8px;
+        }
+        
+        .symptoms-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+        }
+        
+        .body-illustration {
+            width: 100%;
+            height: 80px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            position: relative;
+            margin-top: 10px;
+        }
+        
+        .head-area {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(255, 0, 0, 0.2);
+            border: 1px dashed rgba(255, 0, 0, 0.5);
+        }
+        
+        .ecg-line {
+            height: 40px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            position: relative;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .ecg-line::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--secondary-text);
+            animation: ecg 3s linear infinite;
+        }
+        
+        @keyframes ecg {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .nav-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-icon.active {
+            background-color: var(--highlight);
+            color: var(--primary-text);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="flex justify-between items-center p-6 border-b border-gray-300">
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold mr-8">Cardiology</h1>
+                <div class="flex items-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-200 mr-4 overflow-hidden shadow-sm">
+                        <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="Patient" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h2 class="font-semibold">Tiffany Woodward</h2>
+                        <p class="text-sm text-gray-600">Female, 43</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <h3 class="font-bold text-lg">Hypertension</h3>
+                <div class="flex gap-6 mt-2">
+                    <div>
+                        <p class="text-sm text-gray-600">Heart Rate</p>
+                        <p class="font-medium">89 bpm</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Pressure</p>
+                        <p class="font-medium">100/67</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Oxygen</p>
+                        <p class="font-medium">98 %</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Temperature</p>
+                        <p class="font-medium">36.8 °C</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-2">
+                <button class="px-4 py-2 bg-white rounded-full border border-black text-sm font-medium">Treatment</button>
+                <button class="px-4 py-2 bg-gray-200 rounded-full text-sm">Visits</button>
+                <button class="px-4 py-2 bg-gray-200 rounded-full text-sm">Medications</button>
+                <button class="px-4 py-2 bg-gray-200 rounded-full text-sm">Labs</button>
+                <button class="px-4 py-2 bg-gray-200 rounded-full text-sm">Allergies</button>
+                <button class="px-4 py-2 bg-gray-200 rounded-full text-sm">Genetics</button>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="p-6">
+            <!-- Timeline -->
+            <div class="flex items-center mb-12">
+                <div class="timeline-point locked"></div>
+                <div class="timeline-line"></div>
+                <div class="timeline-point locked"></div>
+                <div class="timeline-line"></div>
+                <button class="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center ml-4">+</button>
+            </div>
+            
+            <div class="flex justify-between">
+                <!-- August Section -->
+                <div class="w-5/12">
+                    <h3 class="font-bold text-lg">Aug / 1 Week</h3>
+                    <div class="vertical-line"></div>
+                    
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium mb-2">Medication</h4>
+                        <div class="medication-tag">
+                            Aspirin ×2
+                            <span class="close">×</span>
+                        </div>
+                    </div>
+                    
+                    <div class="blood-pressure-card mb-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-medium">Blood Pressure</h4>
+                                <div class="flex gap-4 mt-2">
+                                    <div>
+                                        <p class="text-xs text-gray-600">Prior</p>
+                                        <p class="font-medium">180/90</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600">Average</p>
+                                        <p class="font-medium">160 <span class="text-green-600">+10</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-2xl">📊</div>
+                        </div>
+                        <div class="bp-graph"></div>
+                    </div>
+                    
+                    <div class="symptoms-card">
+                        <h4 class="font-medium">Symptoms</h4>
+                        <p class="mt-2">Headache</p>
+                        <div class="body-illustration">
+                            <div class="head-area"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- September Section -->
+                <div class="w-5/12">
+                    <h3 class="font-bold text-lg">Sep / 1 Week</h3>
+                    <div class="vertical-line"></div>
+                    
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium mb-2">Medication</h4>
+                        <div class="medication-tag">
+                            Bisoprolol
+                        </div>
+                        <div class="medication-tag">
+                            Aspirin ×1
+                            <span class="close">×</span>
+                        </div>
+                    </div>
+                    
+                    <div class="blood-pressure-card mb-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-medium">Blood Pressure</h4>
+                                <p class="text-xs text-gray-600">Thursday</p>
+                                <div class="flex gap-4 mt-2">
+                                    <div>
+                                        <p class="text-xs text-gray-600">Prior</p>
+                                        <p class="font-medium">180/90</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-600">Average</p>
+                                        <p class="font-medium">130 <span class="text-green-600">-20</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-2xl">📊</div>
+                        </div>
+                        <div class="bp-graph"></div>
+                    </div>
+                    
+                    <div class="symptoms-card">
+                        <h4 class="font-medium">ECG</h4>
+                        <div class="ecg-line"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Bottom Navigation -->
+        <nav class="bg-gray-900 bg-opacity-90 p-4 flex justify-around">
+            <div class="nav-icon active" data-nav="folder">📁</div>
+            <div class="nav-icon" data-nav="pen">✏️</div>
+            <div class="nav-icon" data-nav="graph">📈</div>
+            <div class="nav-icon" data-nav="list">📋</div>
+            <div class="nav-icon" data-nav="meds">💊</div>
+            <div class="nav-icon" data-nav="dna">🧬</div>
+            <div class="nav-icon" data-nav="history">🕰️</div>
+        </nav>
+    </div>
+
+    <script>
+        // Navigation functionality
+        document.querySelectorAll('.nav-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Medication close buttons
+        document.querySelectorAll('.medication-tag .close').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.parentElement.remove();
+            });
+        });
+        
+        // Tab switching functionality
+        document.querySelectorAll('header button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('header button').forEach(b => {
+                    b.classList.remove('bg-white', 'border', 'border-black', 'font-medium');
+                    b.classList.add('bg-gray-200');
+                });
+                this.classList.add('bg-white', 'border', 'border-black', 'font-medium');
+                this.classList.remove('bg-gray-200');
+            });
+        });
+    </script>
+</body>
+</html>

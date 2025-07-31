@@ -1,6 +1,6 @@
 <?php
 $host = '127.0.0.1:3309'; 
-$dbname = 'cadastral'; 
+$dbname = 'pangosasa'; 
 $username = 'root'; 
 $password = '';
 try {

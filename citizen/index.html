@@ -75,32 +75,6 @@
 
 
 
-        .sidebar-section.grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .sidebar-section.grid > div {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-        }
-
-        .sidebar-title {
-            font-size: 0.8rem;
-            margin-bottom: 0.25rem;
-            color: #a0aec0;
-        }
-
-        .sidebar-value {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: white;
-        }
-
-
-
 
 
 
@@ -167,96 +141,15 @@
         
         /* Sidebar Styles (modifié) */
         .sidebar {
-            width: 250px;
+            width: 15%;
             height: 100vh;
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
+            background-color: #e8d5c0; /* Couleur légèrement plus foncée */
+            position: relative;
             transition: all 0.3s ease;
         }
-
-        
-        .sidebar-section {
-            margin-bottom: 25px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-        }
-
-        .sidebar-title {
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            color: #ffd700;
-        }
-
-        .sidebar-value {
-            font-size: 24px;
-            font-weight: 500;
-        }
-
-        .sidebar-actions {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            color: white;
-            background: rgba(255, 215, 0, 0.2);
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .sidebar-footer {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .logo-text {
-            margin-top: 10px;
-            font-size: 12px;
-            letter-spacing: 2px;
-        }
-
-        /* Pour la version réduite */
-        .sidebar.collapsed {
-            width: 70px;
-        }
-
-        .sidebar.collapsed .sidebar-text,
-        .sidebar.collapsed .sidebar-title,
-        .sidebar.collapsed .sidebar-value,
-        .sidebar.collapsed .logo-text {
-            display: none;
-        }
-
-
-
         
         .sidebar.collapsed {
             width: 70px;
-        }
-
-        @media (min-width: 1024px) {
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
         }
 
 
@@ -301,47 +194,6 @@
         .sidebar-toggle:hover {
             transform: scale(1.05);
             background-color: #e6c200;
-        }
-
-        @keyframes searchGlow {
-            0% { box-shadow: 0 0 5px #00ff00; }
-            100% { box-shadow: 0 0 15px #00ff00, 0 0 10px #00ffff; }
-        }
-
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 colonnes */
-            gap: 16px; /* Espacement entre les cartes */
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .stat-title {
-            font-size: 12px;
-            color: #a0aec0;
-            margin-bottom: 6px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .stat-value {
-            color: white;
-            font-size: 1.1em;
-            font-family: 'Courier New', monospace;
         }
 
 
@@ -509,132 +361,6 @@
             .leaflet-tooltip.custom-tooltip:before {
                 border-top-color: #ffd700;
             }
-
-
-            /* Effet de balayage radar */
-            .radar-sweep {
-                pointer-events: none;
-                z-index: 1000;
-                stroke-dasharray: 5, 3;
-                animation: radarGlow 1.5s infinite;
-            }
-
-            @keyframes radarPulse {
-                0% { opacity: 0.3; }
-                50% { opacity: 0.7; }
-                100% { opacity: 0.3; }
-            }
-
-            .radar-shadow {
-                pointer-events: none;
-                z-index: 999;
-                filter: blur(8px);
-            }
-
-            @keyframes radarGlow {
-                0% { opacity: 0.7; }
-                50% { opacity: 1; }
-                100% { opacity: 0.7; }
-            }
-
-            /* Effet de clignotement */
-            @keyframes parcelBlink {
-                0% { opacity: 1; }
-                50% { opacity: 0.3; }
-                100% { opacity: 1; }
-            }
-
-            .parcel-blink {
-                animation: parcelBlink 0.3s;
-            }
-
-
-
-
-
-
-
-
-
-
-
-            /* Effets visuels supplémentaires */
-        .search-active {
-            animation: searchGlow 1.5s infinite alternate;
-            border: 1px solid #00ff00 !important;
-            background: rgba(0, 255, 0, 0.1) !important;
-        }
-
-        @keyframes cyberSearchPulse {
-            0% { 
-                box-shadow: 0 0 5px #00ff00, 
-                        0 0 10px rgba(0, 255, 0, 0.3); 
-            }
-            100% { 
-                box-shadow: 0 0 15px #00ff00, 
-                        0 0 30px rgba(0, 255, 255, 0.5);
-            }
-        }
-
-        .radar-scan {
-            pointer-events: none;
-            z-index: 1000;
-            animation: radarFade 2s forwards;
-        }
-
-
-
-
-        @keyframes radarFade {
-            0% { opacity: 0.8; }
-            100% { opacity: 0; }
-        }
-
-        .scan-path {
-            pointer-events: none;
-            z-index: 999;
-        }
-
-        /* Animation des stats */
-        .stat-value {
-            transition: all 0.3s ease-out;
-        }
-
-        .stat-update {
-            transform: scale(1.1);
-            color: #00ff88 !important;
-            text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
-        }
-
-        /* Effet de pulsation pour la durée de recherche */
-        #search-time {
-            animation: pulseText 1.5s infinite alternate;
-        }
-
-        @keyframes pulseText {
-            0% { opacity: 0.7; }
-            100% { opacity: 1; color: #00ffff; }
-        }
-
-        .parcel-highlighted {
-            animation: hologramPulse 1.2s infinite ease-in-out;
-        }
-
-        @keyframes hologramPulse {
-            0% { 
-                filter: drop-shadow(0 0 3px #00ffff);
-                opacity: 0.9; 
-            }
-            50% { 
-                filter: drop-shadow(0 0 8px #00ffff);
-                opacity: 1; 
-            }
-            100% { 
-                filter: drop-shadow(0 0 3px #00ffff);
-                opacity: 0.9; 
-            }
-        }
-                    
     </style>
 </head>
 <body class="flex">
@@ -655,74 +381,31 @@
             </div>
         </div>
     </div>
+
+    <!-- Sidebar originale avec modifications mineures -->
     <div class="sidebar" id="sidebar">
-        <div class="sidebar-content">
+        <div class="sidebar-content h-full flex flex-col items-center py-8 space-y-8">
+          
+            
            
-
-            <!-- Boutons de contrôle -->
-            <div class="sidebar-actions">
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-
-            <!-- Logo en bas -->
-            <div class="sidebar-footer">
-                <div class="logo-container">
-                    <svg width="40" height="40" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <br>
+            <!-- Bouton de pliage -->
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <!-- Logo et nom -->
+            <div class="text-center mt-auto"> <!-- mt-auto pour pousser vers le bas -->
+                <div class="mb-2">
+                    <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="30" cy="30" r="28" stroke="#2d2d2d" stroke-width="2"/>
                         <path d="M30 10V50M10 30H50" stroke="#2d2d2d" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <div class="logo-text">PANGO-SASA</div>
                 </div>
+                <div class="tracking-widest text-xs font-bold sidebar-text">PANGO-SASA</div>
             </div>
-             <!-- Section Statistiques -->
-            <div class="stats-grid">
-                <!-- Carte Nom d'utilisateur -->
-                <div class="stat-card">
-                    <h3 class="stat-title">Nom d'utilisateur</h3>
-                    <h1></h1>
-                </div>
-                
-                <!-- Carte Nombre de parcelles -->
-                <div class="stat-card">
-                    <h3 class="stat-title">PARCELLES</h3>
-                    <div class="stat-value" id="parcelle-nbr">0</div>
-                </div>
-                
-                <!-- Carte Niveau de zoom -->
-                <div class="stat-card">
-                    <h3 class="stat-title">ZOOM</h3>
-                    <div class="stat-value" id="zoom-level-display">19</div>
-                </div>
-                
-                <!-- Carte Superficie -->
-                <div class="stat-card">
-                    <h3 class="stat-title">SUPERFICIE</h3>
-                    <div class="stat-value" id="area-display">0 m²</div>
-                </div>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3 class="stat-title">Temps de recherche</h3>
-                    <div class="stat-value" id="search-time">0 ms</div>
-                </div>
-                <div class="stat-card">
-                    <h3 class="stat-title">Latitude</h3>
-                    <div class="stat-value" id="latitude">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3 class="stat-title">Longitude</h3>
-                    <div class="stat-value" id="longitude">0</div>
-                </div>
-            </div>
-            <div class="sidebar-actions">
-                <button id="logoutBtn" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span class="sidebar-text">Déconnexion</span>
-                </button>
-            </div>
-
+            <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white rounded-full shadow hover:bg-red-600 transition-all sidebar-text">Déconnexion</button>
+            <h1 class="tracking-widest text-xs font-bold sidebar-text"></h1>
         </div>
     </div>
     

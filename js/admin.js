@@ -1,164 +1,265 @@
+document.addEventListener('DOMContentLoaded', function() {
+    class AdminManager {
+        constructor() {
+            // Initialisation des propriétés
+            this.currentAdminId = null;
+            this.apiUrl = './api/AuthController.php?action=';
+            
+            // Initialisation des écouteurs d'événements
+            this.initEventListeners();
+            
+            // Chargement initial des données
+            this.loadAgents();
+            this.loadRequests();
+        }
 
-        // Classe pour gérer les demandes d'autorisation
-        class AdminDemandeHandler {
-            constructor() {
-                this.currentAdminId = 1; // À remplacer par l'ID réel après authentification
-            }
+        initEventListeners() {
+            // 1. Gestion des onglets
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
+            });
 
-            async loadRequests(filterStatus = 'en_attente') {
-                try {
-                    const response = await fetch(`./API/getDemandes.php?status=${filterStatus}`);
-                    const demandes = await response.json();
-                    this.displayRequests(demandes);
-                } catch (error) {
-                    console.error('Erreur chargement demandes:', error);
-                }
-            }
+            // 2. Bouton "Nouvel Agent"
+            document.getElementById('add-agent-btn')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('agent-form').classList.toggle('hidden');
+            });
 
-            displayRequests(demandes) {
-                const container = document.getElementById('requests-container');
-                container.innerHTML = '';
+            // 3. Bouton "Annuler" du formulaire
+            document.getElementById('cancel-agent')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('agent-form').classList.add('hidden');
+            });
 
-                if (demandes.length === 0) {
-                    container.innerHTML = '<p class="text-gray-500">Aucune demande trouvée</p>';
-                    return;
-                }
+            // 4. Bouton "Enregistrer" du formulaire
+            document.getElementById('save-agent')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.createAgent();
+            });
 
-                demandes.forEach(demande => {
-                    const card = document.createElement('div');
-                    card.className = 'request-card border rounded-lg p-4 hover:shadow-md transition-shadow';
-                    
-                    const statusClass = this.getStatusClass(demande.statut);
-                    
-                    card.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="flex items-center mb-2">
-                                    <span class="font-medium">Parcelle: ${demande.nom_parcelle}</span>
-                                    <span class="ml-2 px-2 py-1 text-xs rounded-full ${statusClass}">
-                                        ${this.getStatusText(demande.statut)}
-                                    </span>
-                                </div>
-                                <p class="text-sm text-gray-600 mb-1">Agent: ${demande.nom_agent} (${demande.matricule_agent})</p>
-                                <p class="text-sm text-gray-600">Date: ${new Date(demande.date_demande).toLocaleString()}</p>
-                                ${demande.statut === 'en_attente' ? `
-                                <div class="mt-3 flex space-x-2">
-                                    <button class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm approve-btn" data-id="${demande.id}">
-                                        <i class="fas fa-check mr-1"></i> Approuver
-                                    </button>
-                                    <button class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm reject-btn" data-id="${demande.id}">
-                                        <i class="fas fa-times mr-1"></i> Rejeter
-                                    </button>
-                                </div>
-                                ` : ''}
-                            </div>
-                            <button class="text-blue-500 hover:text-blue-700 details-btn" data-id="${demande.id}">
-                                <i class="fas fa-info-circle"></i> Détails
-                            </button>
-                        </div>
-                    `;
-                    
-                    container.appendChild(card);
+            // 5. Filtre des demandes
+            document.getElementById('apply-filter')?.addEventListener('click', () => {
+                const status = document.getElementById('filter-status').value;
+                this.loadRequests(status === 'all' ? null : status);
+            });
+
+            // 6. Bouton de déconnexion
+            document.getElementById('logoutBtn')?.addEventListener('click', () => {
+                this.logout();
+            });
+        }
+
+        // Méthode pour créer un nouvel agent
+        async createAgent() {
+            const agentData = {
+                name: document.getElementById('agent-name').value,
+                email: document.getElementById('agent-email').value,
+                matricule: document.getElementById('agent-matricule').value,
+                phone: document.getElementById('agent-phone').value,
+                password: document.getElementById('agent-password').value,
+                role: 'agent'
+            };
+
+            try {
+                const response = await fetch(`${this.apiUrl}create_user`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(agentData)
                 });
-
-                // Ajout des événements
-                document.querySelectorAll('.approve-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => this.processRequest(e.target.closest('button').dataset.id, 'accept'));
-                });
-
-                document.querySelectorAll('.reject-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => this.processRequest(e.target.closest('button').dataset.id, 'reject'));
-                });
-
-                document.querySelectorAll('.details-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => this.showRequestDetails(e.target.closest('button').dataset.id));
-                });
-            }
-
-            getStatusClass(status) {
-                switch(status) {
-                    case 'approuvee': return 'bg-green-100 text-green-800';
-                    case 'rejetee': return 'bg-red-100 text-red-800';
-                    default: return 'bg-yellow-100 text-yellow-800';
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Agent créé avec succès!');
+                    document.getElementById('agent-form').classList.add('hidden');
+                    this.loadAgents();
+                } else {
+                    alert('Erreur: ' + (result.message || 'Échec de la création'));
                 }
-            }
-
-            getStatusText(status) {
-                switch(status) {
-                    case 'approuvee': return 'Approuvée';
-                    case 'rejetee': return 'Rejetée';
-                    default: return 'En attente';
-                }
-            }
-
-            async processRequest(demandeId, action) {
-                try {
-                    const response = await fetch('./API/processDemande.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            demandeId: demandeId,
-                            action: action,
-                            adminId: this.currentAdminId
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    if (result.success) {
-                        this.loadRequests(document.getElementById('filter-status').value);
-                    } else {
-                        alert('Erreur: ' + (result.message || 'Action non effectuée'));
-                    }
-                } catch (error) {
-                    console.error('Erreur traitement demande:', error);
-                    alert('Une erreur est survenue');
-                }
-            }
-
-            showRequestDetails(demandeId) {
-                // Implémenter la vue détaillée de la demande
-                console.log('Détails demande:', demandeId);
-                // Pourrait ouvrir une modal avec plus d'informations
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur réseau');
             }
         }
 
-        // Initialisation
-        const demandeHandler = new AdminDemandeHandler();
-
-        // Gestion des onglets
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Désactiver tous les onglets
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        // Méthode pour charger la liste des agents
+        async loadAgents() {
+            try {
+                const response = await fetch(`${this.apiUrl}list_agents`);
+                const result = await response.json();
                 
-                // Activer l'onglet sélectionné
-                this.classList.add('active');
-                document.getElementById(`${this.dataset.tab}-tab`).classList.add('active');
+                if (result.success) {
+                    this.displayAgents(result.users);
+                } else {
+                    console.error('Erreur:', result.message);
+                }
+            } catch (error) {
+                console.error('Erreur réseau:', error);
+            }
+        }
+
+        // Affichage des agents dans le tableau
+        displayAgents(agents) {
+            const container = document.getElementById('agents-list');
+            if (!container) return;
+
+            container.innerHTML = agents.length === 0 
+                ? '<tr><td colspan="4" class="p-3 text-center">Aucun agent enregistré</td></tr>'
+                : agents.map(agent => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3">${agent.name}</td>
+                        <td class="p-3">${agent.matricule || '-'}</td>
+                        <td class="p-3">${agent.phone || '-'}</td>
+                        <td class="p-3">
+                            <button class="text-blue-500 hover:text-blue-700 mr-2 edit-agent" data-id="${agent.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-500 hover:text-red-700 delete-agent" data-id="${agent.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Ajout des événements pour les boutons
+            document.querySelectorAll('.edit-agent').forEach(btn => {
+                btn.addEventListener('click', () => this.editAgent(btn.dataset.id));
             });
-        });
+            
+            document.querySelectorAll('.delete-agent').forEach(btn => {
+                btn.addEventListener('click', () => this.deleteAgent(btn.dataset.id));
+            });
+        }
 
-        // Gestion des agents (existant)
-        const agentForm = document.getElementById('agent-form');
-        const addAgentBtn = document.getElementById('add-agent-btn');
-        const cancelAgentBtn = document.getElementById('cancel-agent');
-        
-        addAgentBtn.addEventListener('click', () => {
-            agentForm.classList.toggle('hidden');
-        });
-        
-        cancelAgentBtn.addEventListener('click', () => {
-            agentForm.classList.add('hidden');
-        });
+        // Méthode pour charger les demandes
+        async loadRequests(status = null) {
+            try {
+                const url = status 
+                    ? `${this.apiUrl}list_requests&status=${status}`
+                    : `${this.apiUrl}list_requests`;
+                    
+                const response = await fetch(url);
+                const requests = await response.json();
+                this.displayRequests(requests);
+            } catch (error) {
+                console.error('Erreur:', error);
+            }
+        }
 
-        // Filtre des demandes
-        document.getElementById('apply-filter').addEventListener('click', () => {
-            const status = document.getElementById('filter-status').value;
-            demandeHandler.loadRequests(status === 'all' ? '' : status);
-        });
+        // Affichage des demandes
+        displayRequests(requests) {
+            const container = document.getElementById('requests-container');
+            if (!container) return;
 
-        // Chargement initial
-        document.addEventListener('DOMContentLoaded', () => {
-            // loadAgents(); // À implémenter si nécessaire
-            demandeHandler.loadRequests();
-        });
+            container.innerHTML = requests.length === 0
+                ? '<p class="text-gray-500">Aucune demande trouvée</p>'
+                : requests.map(req => `
+                    <div class="request-card border rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-medium">Demande #${req.id}</h3>
+                                <p class="text-sm text-gray-600">Agent: ${req.nom_agent}</p>
+                                <p class="text-sm text-gray-600">Date: ${new Date(req.date_demande).toLocaleString()}</p>
+                                <span class="inline-block mt-2 px-2 py-1 text-xs rounded-full ${this.getStatusClass(req.statut)}">
+                                    ${this.getStatusText(req.statut)}
+                                </span>
+                            </div>
+                            ${req.statut === 'en_attente' ? `
+                            <div class="flex space-x-2">
+                                <button class="approve-btn px-3 py-1 bg-green-500 text-white rounded text-sm" data-id="${req.id}">
+                                    <i class="fas fa-check mr-1"></i> Approuver
+                                </button>
+                                <button class="reject-btn px-3 py-1 bg-red-500 text-white rounded text-sm" data-id="${req.id}">
+                                    <i class="fas fa-times mr-1"></i> Rejeter
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+            // Gestion des boutons d'action
+            document.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.addEventListener('click', () => this.processRequest(btn.dataset.id, 'accept'));
+            });
+            
+            document.querySelectorAll('.reject-btn').forEach(btn => {
+                btn.addEventListener('click', () => this.processRequest(btn.dataset.id, 'reject'));
+            });
+        }
+
+        // Méthode pour traiter une demande (accept/reject)
+        async processRequest(demandeId, action) {
+            if (!confirm(`Voulez-vous vraiment ${action === 'accept' ? 'approuver' : 'rejeter'} cette demande ?`)) return;
+            
+            try {
+                const response = await fetch(`${this.apiUrl}process_request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        demandeId: demandeId,
+                        action: action,
+                        adminId: this.currentAdminId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    this.loadRequests(document.getElementById('filter-status').value);
+                } else {
+                    alert('Erreur: ' + (result.message || 'Action non effectuée'));
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue');
+            }
+        }
+
+        // Méthode pour changer d'onglet
+        switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`.tab-btn[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        // Méthode pour déconnecter l'admin
+        logout() {
+            fetch(`${this.apiUrl}logout`)
+                .then(() => {
+                    localStorage.removeItem('pango_sasa_auth');
+                    window.location.href = 'login.html';
+                })
+                .catch(error => {
+                    console.error('Erreur déconnexion:', error);
+                });
+        }
+
+        // Helpers pour les statuts
+        getStatusClass(status) {
+            switch(status) {
+                case 'approuvee': return 'bg-green-100 text-green-800';
+                case 'rejetee': return 'bg-red-100 text-red-800';
+                default: return 'bg-yellow-100 text-yellow-800';
+            }
+        }
+
+        getStatusText(status) {
+            switch(status) {
+                case 'approuvee': return 'Approuvée';
+                case 'rejetee': return 'Rejetée';
+                default: return 'En attente';
+            }
+        }
+    }
+
+    // Initialisation
+    const adminManager = new AdminManager();
+});

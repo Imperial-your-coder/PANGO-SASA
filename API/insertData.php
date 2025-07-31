@@ -1,99 +1,108 @@
 <?php
+ob_start();
+
 header('Content-Type: application/json');
 header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Allow-Headers: Content-Type");
 
-require_once './db_connection.php';
+require 'db_connection.php';
 
-// Vérifier que c'est bien une requête POST
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Méthode non autorisée']);
-    exit;
+if (!$pdo) {
+    die(json_encode([
+        'success' => false,
+        'message' => 'Database connection failed'
+    ]));
 }
 
 try {
-    // Récupérer les données JSON
     $data = json_decode($_POST['data'], true);
     
-    // Validation
-    if (json_last_error() !== JSON_ERROR_NONE || !$data) {
-        throw new Exception('Données JSON invalides');
-    }
-
-    // Valider les données requises
-    $required = ['name', 'status', 'area', 'coordinates'];
-    foreach ($required as $field) {
-        if (empty($data[$field])) {
-            throw new Exception("Le champ $field est requis");
-        }
-    }
-
     // Commencer une transaction
     $pdo->beginTransaction();
-
-    // Insérer les données de base
-    $stmt = $pdo->prepare("INSERT INTO parcelles 
-        (name, status, area, coordinates, owner, phone, purchase_date) 
-        VALUES (:name, :status, :area, :coordinates, :owner, :phone, :purchase_date)");
     
-    $coordinates = json_encode($data['coordinates']);
-    
-    $stmt->execute([
-        ':name' => $data['name'],
-        ':status' => $data['status'],
-        ':area' => $data['area'],
-        ':coordinates' => $coordinates,
-        ':owner' => $data['owner'] ?? null,
-        ':phone' => $data['phone'] ?? null,
-        ':purchase_date' => $data['purchase_date'] ?? null
-    ]);
-
-    $parcelId = $pdo->lastInsertId();
-
-    // Gérer l'upload de l'image
-    $photoPath = null;
-    if (!empty($_FILES['photo'])) {
-        $uploadDir = '../uploads/' . $parcelId . '/';
+    // 1. Gérer le propriétaire si la parcelle est occupée
+    $proprietaire_id = null;
+    if ($data['statut'] === 'occupee' && !empty($data['proprietaire_nom'])) {
+        // Vérifier si le propriétaire existe déjà
+        $stmt = $pdo->prepare("SELECT id FROM proprietaires WHERE nom = ?");
+        $stmt->execute([$data['proprietaire_nom']]);
+        $existing = $stmt->fetch();
         
-        // Créer le répertoire s'il n'existe pas
-        if (!file_exists($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        // Générer un nom de fichier unique
-        $extension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION) ?: 'jpg';
-        $filename = uniqid() . '.' . $extension;
-        $targetPath = $uploadDir . $filename;
-
-        // Déplacer le fichier uploadé
-        if (move_uploaded_file($_FILES['photo']['tmp_name'], $targetPath)) {
-            $photoPath = '../uploads/' . $parcelId . '/' . $filename;
-            
-            // Mettre à jour le chemin de la photo dans la base de données
-            $pdo->prepare("UPDATE parcelles SET photo = ? WHERE id = ?")
-                ->execute([$photoPath, $parcelId]);
+        if ($existing) {
+            $proprietaire_id = $existing['id'];
+        } else {
+            // Créer un nouveau propriétaire
+            $stmt = $pdo->prepare("
+                INSERT INTO proprietaires (nom, phone, created_at) 
+                VALUES (?, ?, NOW())
+            ");
+            $stmt->execute([
+                $data['proprietaire_nom'],
+                $data['proprietaire_phone']
+            ]);
+            $proprietaire_id = $pdo->lastInsertId();
         }
     }
-
+    
+    // 2. Gérer l'upload de la photo
+    $photoPath = null;
+    if (!empty($_FILES['photo'])) {
+        $uploadDir = 'uploads/parcelles/';
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        $extension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid('parcel_') . '.' . $extension;
+        $targetPath = $uploadDir . $filename;
+        
+        if (move_uploaded_file($_FILES['photo']['tmp_name'], $targetPath)) {
+            $photoPath = $targetPath;
+        }
+    }
+    
+    // 3. Insérer la parcelle
+    $stmt = $pdo->prepare("
+        INSERT INTO parcelles (
+            nom, 
+            statut, 
+            surface, 
+            coordonnees, 
+            proprietaire_id, 
+            date_acquisition,
+            photo,
+            created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+    ");
+    
+    $stmt->execute([
+        $data['nom'],
+        $data['statut'],
+        $data['surface'],
+        $data['coordonnees'],
+        $proprietaire_id,
+        $data['date_acquisition'] ?? null,
+        $photoPath
+    ]);
+    
+    $parcelle_id = $pdo->lastInsertId();
+    
     // Valider la transaction
     $pdo->commit();
-
-    http_response_code(201);
+    
+    ob_end_clean();
     echo json_encode([
         'success' => true,
-        'id' => $parcelId,
-        'photoPath' => $photoPath,
+        'id' => $parcelle_id,
         'message' => 'Parcelle enregistrée avec succès'
     ]);
-
-} catch (Exception $e) {
+    
+} catch (PDOException $e) {
     $pdo->rollBack();
-    http_response_code(400);
+    ob_end_clean();
+    http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Erreur: ' . $e->getMessage()
+        'message' => 'Database error: ' . $e->getMessage()
     ]);
 }
 ?>

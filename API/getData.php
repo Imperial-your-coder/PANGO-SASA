@@ -1,11 +1,9 @@
 <?php
-// Assurez-vous qu'aucun output n'est envoyé avant les headers
 ob_start();
 
 header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *"); // Important pour les requêtes fetch
+header("Access-Control-Allow-Origin: *");
 
-// Vérifiez que le fichier de connexion existe et est valide
 $dbFile = 'db_connection.php';
 if (!file_exists($dbFile)) {
     die(json_encode([
@@ -16,7 +14,6 @@ if (!file_exists($dbFile)) {
 
 require $dbFile;
 
-// Vérifiez la connexion à la base de données
 if (!$pdo) {
     die(json_encode([
         'success' => false,
@@ -25,7 +22,22 @@ if (!$pdo) {
 }
 
 try {
-    $stmt = $pdo->query("SELECT id, name, status, area, coordinates, owner, phone, purchase_date FROM parcelles");
+    // Requête modifiée pour correspondre à la nouvelle structure
+    $stmt = $pdo->query("
+        SELECT 
+            p.id, 
+            p.nom, 
+            p.statut, 
+            p.surface, 
+            p.coordonnees, 
+            p.proprietaire_id, 
+            pr.nom AS proprietaire_nom,
+            pr.phone AS proprietaire_phone,
+            p.date_acquisition,
+            p.photo
+        FROM parcelles p
+        LEFT JOIN proprietaires pr ON p.proprietaire_id = pr.id
+    ");
     
     if (!$stmt) {
         throw new PDOException($pdo->errorInfo()[2]);
@@ -34,20 +46,24 @@ try {
     $parcelles = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     foreach ($parcelles as &$parcelle) {
-        // Validez que coordinates est un JSON valide
-        if (!empty($parcelle['coordinates'])) {
-            $decoded = json_decode($parcelle['coordinates'], true);
+        // Traitement des coordonnées JSON
+        if (!empty($parcelle['coordonnees'])) {
+            $decoded = json_decode($parcelle['coordonnees'], true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                $parcelle['coordinates'] = $decoded;
+                $parcelle['coordonnees'] = $decoded;
             } else {
-                $parcelle['coordinates'] = [];
+                $parcelle['coordonnees'] = [];
             }
         } else {
-            $parcelle['coordinates'] = [];
+            $parcelle['coordonnees'] = [];
         }
+        
+        // Formatage des données pour le frontend
+        $parcelle['proprietaire'] = $parcelle['proprietaire_nom'] ?? null;
+        $parcelle['phone'] = $parcelle['proprietaire_phone'] ?? null;
+        $parcelle['purchase_date'] = $parcelle['date_acquisition'] ?? null;
     }
     
-    // Nettoyage du buffer avant output
     ob_end_clean();
     echo json_encode($parcelles);
     

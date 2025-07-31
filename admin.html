@@ -6,7 +6,8 @@
     <title>PANGO-SASA - Administration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="js/admin.js" defer></script>
+    <script src="js/AdminManager.js" defer></script>
+    <script src="js/auth.js" defer></script>
     <style>
         /* Reprenez tout votre CSS existant */
 
@@ -389,6 +390,42 @@
             margin-bottom: 10px;
             background: #f8f8f8;
         }
+
+
+        .edit-btn, .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin: 0 5px;
+        }
+
+        .edit-btn:hover { color: #2563eb; }
+        .delete-btn:hover { color: #dc2626; }
+
+        .request-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .request-actions {
+            margin-top: 0.5rem;
+        }
+
+        .approve-btn, .reject-btn {
+            padding: 0.25rem 0.5rem;
+            margin-right: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .approve-btn { background-color: #10b981; color: white; }
+        .reject-btn { background-color: #ef4444; color: white; }
+
+
+
+
     </style>
 </head>
 <body class="flex">
@@ -411,7 +448,12 @@
                         <i class="fas fa-envelope mr-2"></i> Demandes
                     </li>
                 </ul>
+                
             </nav>
+            <div class="text-center">
+                <span>Role ou nom : </span><h1 class="tracking-widest text-xs font-bold sidebar-text"></h1><br>
+                <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white rounded-full shadow hover:bg-red-600 transition-all sidebar-text">Déconnexion</button>
+            </div>
         </div>
     </div>
     
@@ -447,6 +489,10 @@
                         <div class="form-group">
                             <label>Mot de passe</label>
                             <input type="password" id="agent-password" class="w-full p-2 border rounded">
+                        </div>
+                        <div class="form-group">
+                            <label>Adresse Email</label>
+                            <input type="text" id="agent-email" class="w-full p-2 border rounded">
                         </div>
                     </div>
                     <div class="form-actions mt-4">
@@ -499,5 +545,14 @@
             </div>
         </div>
     </div>
+     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const auth = new Auth();
+            const user = auth.getSession();
+            if (user) {
+                document.querySelector('h1').textContent += ` ${user.name}`;
+            }
+        });
+    </script>
 </body>
 </html>
